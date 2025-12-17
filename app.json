@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "platforms": ["ios", "android", "web"],
     "assetBundlePatterns": ["**/*"],
-    "plugins": ["expo-secure-store"],
-    "newArchEnabled": false
+    "plugins": ["expo-secure-store"]
+
   }
 }
