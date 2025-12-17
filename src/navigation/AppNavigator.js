@@ -1,0 +1,42 @@
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
+import ProfileEditorScreen from "../screens/ProfileEditorScreen";
+import HomeScreen from "../screens/HomeScreen";
+import ClassesScreen from "../screens/ClassesScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import CustomTabBar from "../components/navigation/CustomTabBar";
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ProfileEditor" component={ProfileEditorScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function AppTabs() {
+  return (
+    <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={(props) => <CustomTabBar {...props} />}>
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Classes" component={ClassesScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
+    </Tab.Navigator>
+  );
+}
+
+export default function AppNavigator({ logged }) {
+  return (
+    <NavigationContainer>
+      {logged ? <AppTabs /> : <AuthStack />}
+    </NavigationContainer>
+  );
+}
