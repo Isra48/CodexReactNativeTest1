@@ -10,7 +10,7 @@ export default function HeroCard({ item, isFavorite, onToggleFavorite }) {
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.overlay}>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>DESTACADO</Text>
+          <Text style={styles.badgeText}>Proxima Clase</Text>
         </View>
 
         <View>

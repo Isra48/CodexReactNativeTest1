@@ -4,6 +4,9 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import TextField from "../components/common/TextField";
 import colors from "../constants/colors";
 import { setUser } from "../utils/storage";
+import { KeyboardAvoidingView, Platform } from "react-native";
+import loginBg from '../../assets/images/Welcome.png'
+
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -24,34 +27,58 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500" }}
-      style={styles.heroContainer}
-    >
-      <View style={styles.loginOverlay} />
+   <ImageBackground source={loginBg} style={styles.heroContainer}>
+  <View style={styles.loginOverlay} />
 
-      <ScrollView contentContainerStyle={styles.loginContent}>
-        <View style={styles.loginHeader}>
-          <Text style={styles.heroTitle}>Descubre{"\n"}nuevos lugares</Text>
-          <Text style={styles.heroSubtitle}>Explora el mundo con nosotros</Text>
-        </View>
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : undefined}
+  >
+    <ScrollView
+  contentContainerStyle={styles.loginContent}
+  keyboardShouldPersistTaps="handled"
+>
+  <View style={styles.loginWrapper}>
+    {/* TEXTO FUERA DEL FORM */}
+    <View style={styles.loginHeader}>
+      <Text style={styles.heroTitle}>MindCo</Text>
+      <Text style={styles.heroSubtitle}>Explora tu nueva comunidad.</Text>
+    </View>
 
-        <View style={styles.loginForm}>
-          <TextField placeholder="Email" value={email} onChangeText={setEmail} />
-          <TextField placeholder="Contraseña" secureTextEntry value={password} onChangeText={setPassword} />
+    {/* FORM */}
+    <View style={styles.loginForm}>
+      <TextField
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextField
+        placeholder="Contraseña"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
 
-          <PrimaryButton title="Iniciar sesión" onPress={handleLogin} loading={loading} />
+      <PrimaryButton
+        title="Iniciar sesión"
+        onPress={handleLogin}
+        loading={loading}
+      />
 
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.linkText}>Crear una cuenta</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </ImageBackground>
+      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <Text style={styles.linkText}>Crear una cuenta</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</ScrollView>
+
+  </KeyboardAvoidingView>
+</ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  
   heroContainer: {
     flex: 1,
     justifyContent: "flex-end",
@@ -62,18 +89,19 @@ const styles = StyleSheet.create({
   },
   loginContent: {
     flexGrow: 1,
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     paddingBottom: 20,
   },
   loginHeader: {
     paddingHorizontal: 24,
     paddingTop: 60,
+    marginBottom:32
   },
   heroTitle: {
     fontSize: 40,
     fontWeight: "700",
     color: colors.white,
-    marginBottom: 12,
+    marginBottom: 6,
     lineHeight: 48,
   },
   heroSubtitle: {
