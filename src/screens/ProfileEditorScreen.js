@@ -76,7 +76,9 @@ export default function ProfileEditorScreen({ navigation }) {
   maxDate.setFullYear(maxDate.getFullYear() - 13);
 
   return (
+    
     <ScrollView style={globalStyles.container}>
+      
       <View style={styles.profileHeader}>
         <Text style={styles.profileTitle}>Completa tu perfil</Text>
         <Text style={styles.profileSubtitle}>
@@ -163,7 +165,7 @@ export default function ProfileEditorScreen({ navigation }) {
 const styles = StyleSheet.create({
   profileHeader: {
     paddingHorizontal: 24,
-    paddingTop: 82,
+    paddingTop: 32,
     paddingBottom: 24,
   },
   profileTitle: {

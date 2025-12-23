@@ -6,9 +6,13 @@ import HeroCard from "../components/cards/HeroCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
 import { globalStyles } from "../styles/globalStyles";
+import { TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
 
 export default function HomeScreen() {
   const [favorites, setFavorites] = useState([]);
+  const navigation = useNavigation();
 
   const toggleFavorite = (id) =>
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -18,7 +22,14 @@ export default function HomeScreen() {
   return (
     <ScrollView style={globalStyles.container}>
       <View style={styles.homeHeader}>
-        <View style={styles.smallAvatar}><Text>👤</Text></View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ProfileEditor")}
+          activeOpacity={0.7}
+        >
+          <View style={styles.smallAvatar}>
+            <Text>👤</Text>
+          </View>
+        </TouchableOpacity>
         <Text style={styles.homeTitle}>MindCo</Text>
         <Text style={styles.searchIcon}>🔍</Text>
       </View>
@@ -37,7 +48,7 @@ export default function HomeScreen() {
         keyExtractor={(i) => i.id}
         contentContainerStyle={{ paddingLeft: 24, paddingBottom: 20 }}
         renderItem={({ item }) => (
-          <CategoryCard item={item} onPress={() => {}} />
+          <CategoryCard item={item} onPress={() => { }} />
         )}
       />
 
