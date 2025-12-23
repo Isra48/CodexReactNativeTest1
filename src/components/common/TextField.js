@@ -33,6 +33,6 @@ const styles = StyleSheet.create({
   },
 
   focusedInput: {
-    borderColor: colors.green,       
+    borderColor: colors.primary,       
   },
 });
