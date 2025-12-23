@@ -8,6 +8,7 @@ export const colors = {
   lightGray: "#e0e0e0",
   darkText: "#333333",
   placeholderText: "#999999",
+  green: "#3CB371"
 };
 
 export default colors;

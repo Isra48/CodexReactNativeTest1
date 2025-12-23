@@ -1,26 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import { TextInput, StyleSheet } from "react-native";
 import colors from "../../constants/colors";
 
 export default function TextField(props) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <TextInput
-      placeholderTextColor={colors.placeholderText}
-      style={[styles.input, props.style]}
       {...props}
+      style={[
+        styles.input,
+        isFocused && styles.focusedInput,
+      ]}
+      placeholderTextColor={colors.gray}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     />
   );
 }
 
 const styles = StyleSheet.create({
   input: {
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.white,     // ✅ FONDO BLANCO
     borderWidth: 1,
     borderColor: colors.lightGray,
-    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    fontSize: 14,
+    fontSize: 16,
     color: colors.darkText,
+    marginBottom: 16,
+  },
+
+  focusedInput: {
+    borderColor: colors.green,       
   },
 });
