@@ -19,7 +19,7 @@ export default function HomeScreen() {
     <ScrollView style={globalStyles.container}>
       <View style={styles.homeHeader}>
         <View style={styles.smallAvatar}><Text>👤</Text></View>
-        <Text style={styles.homeTitle}>Descubre Lugares</Text>
+        <Text style={styles.homeTitle}>MindCo</Text>
         <Text style={styles.searchIcon}>🔍</Text>
       </View>
 
@@ -29,7 +29,7 @@ export default function HomeScreen() {
         onToggleFavorite={() => toggleFavorite(featured.id)}
       />
 
-      <Text style={globalStyles.sectionTitle}>Categorías</Text>
+      <Text style={globalStyles.sectionTitle}>Eventos presenciales</Text>
 
       <FlatList
         horizontal
@@ -41,7 +41,7 @@ export default function HomeScreen() {
         )}
       />
 
-      <Text style={globalStyles.sectionTitle}>Destinos Populares</Text>
+      <Text style={globalStyles.sectionTitle}>Clases Populares</Text>
 
       {destinations.map((item) => (
         <DestinationCard
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 72,
     paddingBottom: 20,
   },
   smallAvatar: {

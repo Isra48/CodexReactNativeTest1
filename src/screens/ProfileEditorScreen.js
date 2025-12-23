@@ -55,7 +55,7 @@ export default function ProfileEditorScreen({ navigation }) {
 const styles = StyleSheet.create({
   profileHeader: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 72,
     paddingBottom: 24,
   },
   profileTitle: {

@@ -14,7 +14,7 @@ export const globalStyles = StyleSheet.create({
   },
   screenHeader: {
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 72,
     paddingBottom: 10,
   },
   screenTitle: {
