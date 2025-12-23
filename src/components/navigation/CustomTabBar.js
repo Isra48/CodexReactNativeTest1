@@ -1,11 +1,13 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import colors from "../../constants/colors";
+import { Feather } from "@expo/vector-icons";
+
 
 const icons = {
-  Home: "🏠",
-  Classes: "🎥",
-  Settings: "⚙️",
+  Home: "home",
+  Classes: "video",
+  Settings: "settings",
 };
 
 export default function CustomTabBar({ state, navigation }) {
@@ -21,7 +23,12 @@ export default function CustomTabBar({ state, navigation }) {
             onPress={() => navigation.navigate(route.name)}
             style={[styles.tabItem, isFocused && styles.tabItemActive]}
           >
-            <Text style={styles.icon}>{icons[label]}</Text>
+            <Feather
+              name={icons[label]}
+              size={22}
+              color={isFocused ? colors.secondary : colors.gray}
+            />
+
             <Text style={isFocused ? styles.tabLabelActive : styles.tabLabel}>{label}</Text>
           </TouchableOpacity>
         );
@@ -34,23 +41,33 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     backgroundColor: colors.white,
-    paddingVertical: 10,
-    borderTopWidth: 1,
+    paddingBottom: 26,
+    
+    borderTopWidth: 2,
     borderColor: colors.lightGray,
+    
   },
   tabItem: {
     flex: 1,
     alignItems: "center",
+     paddingTop: 6,
+   
+  
+  
   },
   tabItemActive: {
-    borderTopWidth: 2,
+    borderTopWidth: 4,
+     paddingTop: 6,
     borderTopColor: colors.secondary,
+
   },
   icon: {
     fontSize: 22,
+   
   },
   tabLabel: {
     color: colors.gray,
+    
   },
   tabLabelActive: {
     color: colors.secondary,

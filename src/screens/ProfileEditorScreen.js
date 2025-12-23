@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Keyboard,
   Platform,
+  Modal,
+  Pressable,
+  Appearance,
 } from "react-native";
 import TextField from "../components/common/TextField";
 import PrimaryButton from "../components/buttons/PrimaryButton";
@@ -16,6 +18,7 @@ import { getUser, setUser } from "../utils/storage";
 import { globalStyles } from "../styles/globalStyles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import PhoneInput from "react-native-phone-number-input";
+import { Feather } from "@expo/vector-icons";
 
 export default function ProfileEditorScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -30,9 +33,27 @@ export default function ProfileEditorScreen({ navigation }) {
 
   const [loading, setLoading] = useState(false);
 
+  // 🔒 Forzar Light Mode SOLO en esta pantalla
+  useEffect(() => {
+    const originalScheme = Appearance.getColorScheme();
+    Appearance.setColorScheme("light");
+
+    return () => {
+      Appearance.setColorScheme(originalScheme);
+    };
+  }, []);
+
+  const openDatePicker = () => setShowDatePicker(true);
+  const closeDatePicker = () => setShowDatePicker(false);
+
   const onChangeDate = (_, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) setBirthDate(selectedDate);
+    if (Platform.OS === "android") {
+      closeDatePicker();
+    }
+
+    if (selectedDate) {
+      setBirthDate(selectedDate);
+    }
   };
 
   const save = async () => {
@@ -42,10 +63,7 @@ export default function ProfileEditorScreen({ navigation }) {
     }
 
     if (!formattedPhone || !phoneInputRef.current?.isValidNumber(phone)) {
-      Alert.alert(
-        "Número inválido",
-        "Ingresa un número de WhatsApp válido"
-      );
+      Alert.alert("Número inválido", "Ingresa un número de WhatsApp válido");
       return;
     }
 
@@ -66,19 +84,17 @@ export default function ProfileEditorScreen({ navigation }) {
 
   const formattedBirthDate = birthDate
     ? birthDate.toLocaleDateString("es-MX", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
     : "";
 
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 13);
 
   return (
-    
     <ScrollView style={globalStyles.container}>
-      
       <View style={styles.profileHeader}>
         <Text style={styles.profileTitle}>Completa tu perfil</Text>
         <Text style={styles.profileSubtitle}>
@@ -88,7 +104,7 @@ export default function ProfileEditorScreen({ navigation }) {
 
       <View style={styles.avatarContainer}>
         <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>👤</Text>
+          <Feather name="user" size={52} color="#6f6e6e" />
         </View>
         <TouchableOpacity>
           <Text style={styles.changePhotoLink}>Cambiar foto</Text>
@@ -134,7 +150,7 @@ export default function ProfileEditorScreen({ navigation }) {
           />
         </View>
 
-        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+        <TouchableOpacity onPress={openDatePicker} activeOpacity={0.8}>
           <TextField
             placeholder="Fecha de nacimiento"
             value={formattedBirthDate}
@@ -143,25 +159,62 @@ export default function ProfileEditorScreen({ navigation }) {
           />
         </TouchableOpacity>
 
-        {showDatePicker && (
+        {/* ANDROID */}
+        {showDatePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={birthDate || new Date(2000, 0, 1)}
             mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
             maximumDate={maxDate}
             onChange={onChangeDate}
+            textColor={colors.darkText}
+            themeVariant="light"
+            style={{
+              width: "100%",
+              alignSelf: "center",
+            }}
+
           />
         )}
 
-        <PrimaryButton
-          title="Guardar"
-          onPress={save}
-          loading={loading}
-        />
+        {/* iOS */}
+        {Platform.OS === "ios" && (
+          <Modal
+            transparent
+            animationType="slide"
+            visible={showDatePicker}
+            onRequestClose={closeDatePicker}
+          >
+            <View style={styles.modalOverlay}>
+              <Pressable style={styles.backdrop} onPress={closeDatePicker} />
+
+              <View style={styles.iosPickerContainer}>
+                <DateTimePicker
+                  value={birthDate || new Date(2000, 0, 1)}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={maxDate}
+                  onChange={onChangeDate}
+                  textColor={colors.darkText}
+                  themeVariant="light"
+                />
+
+                <TouchableOpacity
+                  style={styles.iosPickerDone}
+                  onPress={closeDatePicker}
+                >
+                  <Text style={styles.iosPickerDoneText}>Listo</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        <PrimaryButton title="Guardar" onPress={save} loading={loading} />
       </View>
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   profileHeader: {
     paddingHorizontal: 24,
@@ -191,9 +244,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: {
-    fontSize: 48,
-  },
   changePhotoLink: {
     marginTop: 12,
     color: colors.primary,
@@ -203,10 +253,9 @@ const styles = StyleSheet.create({
 
   formContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 40, // para que el botón no quede pegado al borde
+    paddingBottom: 40,
   },
 
-  // Phone input (WhatsApp)
   phoneContainer: {
     marginBottom: 16,
   },
@@ -214,15 +263,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 56,
     borderRadius: 12,
-    backgroundColor: colors.white,
+    backgroundColor: "#FFFFFF", // fijo
     borderWidth: 1,
     borderColor: colors.lightGray,
   },
   phoneTextContainer: {
     backgroundColor: "transparent",
     borderRadius: 12,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
   },
   phoneText: {
     fontSize: 16,
@@ -235,5 +282,35 @@ const styles = StyleSheet.create({
   flagButton: {
     borderRadius: 12,
     paddingHorizontal: 8,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.3)",
+     paddingHorizontal: 0,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  iosPickerContainer: {
+    backgroundColor: "#FFFFFF", // fijo
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 12,
+    width: "100%",
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  iosPickerDone: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  iosPickerDoneText: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

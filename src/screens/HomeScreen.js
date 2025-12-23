@@ -8,6 +8,8 @@ import DestinationCard from "../components/cards/DestinationCard";
 import { globalStyles } from "../styles/globalStyles";
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Feather } from '@expo/vector-icons';
+
 
 
 export default function HomeScreen() {
@@ -27,11 +29,12 @@ export default function HomeScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.smallAvatar}>
-            <Text>👤</Text>
+          <Feather name="user" size={24} color="#000" />
+
           </View>
         </TouchableOpacity>
         <Text style={styles.homeTitle}>MindCo</Text>
-        <Text style={styles.searchIcon}>🔍</Text>
+         <Feather name="search" size={24} color="#000" />
       </View>
 
       <HeroCard
@@ -46,7 +49,7 @@ export default function HomeScreen() {
         horizontal
         data={categories}
         keyExtractor={(i) => i.id}
-        contentContainerStyle={{ paddingLeft: 24, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingLeft: 24, paddingBottom: 20,  }}
         renderItem={({ item }) => (
           <CategoryCard item={item} onPress={() => { }} />
         )}
@@ -74,19 +77,10 @@ const styles = StyleSheet.create({
     paddingTop: 72,
     paddingBottom: 20,
   },
-  smallAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.lightGray,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+ 
   homeTitle: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 24,
+    fontWeight: "400",
   },
-  searchIcon: {
-    fontSize: 22,
-  },
+
 });
