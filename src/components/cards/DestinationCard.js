@@ -2,16 +2,14 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import colors from "../../constants/colors";
 
-export default function DestinationCard({ item, isFavorite, onToggleFavorite }) {
+export default function DestinationCard({ item, onPress }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onToggleFavorite}>
+    <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.category}>{item.category}</Text>
       </View>
-
-      <Text style={styles.favoriteIcon}>{isFavorite ? "❤️" : "🤍"}</Text>
     </TouchableOpacity>
   );
 }
@@ -40,9 +38,5 @@ const styles = StyleSheet.create({
   },
   category: {
     color: colors.gray,
-  },
-  favoriteIcon: {
-    fontSize: 20,
-    marginLeft: 8,
   },
 });
