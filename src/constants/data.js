@@ -7,15 +7,15 @@ export const categories = [
 export const destinations = [
   {
     id: "1",
-    title: "Sábado 13 de Dic",
+    title: "Encontrando tu centro",
     category: "Mindfulness",
-    description: "Únete a nuestra sesión de meditación grupal",
+    description: "miercoles 24 de Diciembre a las 4:00pm horario CDMX",
     image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300",
     instructor: "Ana Lore",
     modality: "Zoom",
     materials: "Tapete de yoga, audífonos",
     duration: 60,
-    startDateTime: "2025-12-13T15:00:00Z",
+    startDateTime: "2025-12-24T40:00:00Z",
     link: "https://zoom.us/j/123456789",
   },
   {

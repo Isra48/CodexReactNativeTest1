@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, FlatList, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, FlatList, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
 import colors from "../constants/colors";
 import { categories, destinations } from "../constants/data";
 import HeroCard from "../components/cards/HeroCard";
@@ -46,8 +46,14 @@ export default function HomeScreen() {
     if (!classItem) return;
     const formattedDate = classItem.date
       ? `${classItem.date}${classItem.time ? ` - ${classItem.time}` : ""}`
-      : classItem.title;
-    setSelectedClass({ ...classItem, date: formattedDate });
+      : null;
+
+    setSelectedClass({ ...classItem, ...(formattedDate ? { date: formattedDate } : {}) });
+  };
+
+  const handleJoinLive = (classItem) => {
+    if (!classItem) return;
+    Alert.alert("Entrar a la clase", "Aquí abriremos Zoom cuando esté listo.");
   };
 
   return (
@@ -62,7 +68,7 @@ export default function HomeScreen() {
         <Feather name="search" size={24} color="#000" />
       </View>
 
-      <HeroCard item={featured} onPress={() => openClassDetails(featured)} />
+      <HeroCard item={featured} onOpenDetails={openClassDetails} onJoinLive={handleJoinLive} />
 
       <Text style={globalStyles.sectionTitle}>Eventos presenciales</Text>
 

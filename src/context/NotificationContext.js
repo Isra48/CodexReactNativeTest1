@@ -10,7 +10,7 @@ const PERMISSION_REQUESTED_KEY = "push_permission_requested";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
