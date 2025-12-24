@@ -4,10 +4,18 @@ import { pastClasses, upcomingClasses } from "../constants/data";
 import ClassCard from "../components/cards/ClassCard";
 import { globalStyles } from "../styles/globalStyles";
 import colors from "../constants/colors";
+import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
 
 export default function ClassesScreen() {
   const [tab, setTab] = useState("upcoming");
+  const [selectedClass, setSelectedClass] = useState(null);
   const data = tab === "upcoming" ? upcomingClasses : pastClasses;
+
+  const openClassDetails = (item) => {
+    if (!item) return;
+    const formattedDate = item.date ? `${item.date}${item.time ? ` - ${item.time}` : ""}` : item.title;
+    setSelectedClass({ ...item, date: formattedDate });
+  };
 
   return (
     <View style={globalStyles.container}>
@@ -27,9 +35,15 @@ export default function ClassesScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 24 }}>
         {data.map((item) => (
-          <ClassCard key={item.id} item={item} />
+          <ClassCard key={item.id} item={item} onPress={openClassDetails} />
         ))}
       </ScrollView>
+
+      <ClassInfoBottomSheet
+        visible={!!selectedClass}
+        onClose={() => setSelectedClass(null)}
+        classInfo={selectedClass}
+      />
     </View>
   );
 }

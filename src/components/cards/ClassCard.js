@@ -1,10 +1,10 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import colors from "../../constants/colors";
 
-export default function ClassCard({ item }) {
+export default function ClassCard({ item, onPress }) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => onPress?.(item)} activeOpacity={0.8}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.content}>
         <Text style={styles.title}>{item.title}</Text>
@@ -13,7 +13,7 @@ export default function ClassCard({ item }) {
           {item.date} - {item.time}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

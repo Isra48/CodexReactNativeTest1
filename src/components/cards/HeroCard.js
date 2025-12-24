@@ -2,11 +2,11 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import colors from "../../constants/colors";
 
-export default function HeroCard({ item, isFavorite, onToggleFavorite }) {
+export default function HeroCard({ item, onPress }) {
   if (!item) return null;
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={onPress}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.overlay}>
         <View style={styles.badge}>
@@ -17,12 +17,8 @@ export default function HeroCard({ item, isFavorite, onToggleFavorite }) {
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.description}>{item.description}</Text>
         </View>
-
-        <TouchableOpacity onPress={onToggleFavorite}>
-          <Text style={styles.favoriteIcon}>{isFavorite ? "❤️" : "🤍"}</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -54,8 +50,4 @@ const styles = StyleSheet.create({
   badgeText: { color: colors.white, fontSize: 11, fontWeight: "700" },
   title: { fontSize: 22, color: colors.white, fontWeight: "700" },
   description: { color: colors.white },
-  favoriteIcon: {
-    fontSize: 20,
-    alignSelf: "flex-start",
-  },
 });
