@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   Linking,
+  Easing,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Clipboard from "react-native/Libraries/Components/Clipboard/Clipboard";
@@ -20,13 +21,33 @@ const ClassInfoBottomSheet = ({ visible, onClose, classInfo }) => {
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 0, duration: 220, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 280,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(opacity, { toValue: 0, duration: 120, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 300, duration: 180, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 180,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 300,
+          duration: 240,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   }, [opacity, translateY, visible]);
