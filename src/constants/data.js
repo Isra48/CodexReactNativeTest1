@@ -27,7 +27,7 @@ export const classes = [
     category: "Mindfulness",
     instructor: "Ana Lore",
     date: "24 Dic",
-    time: "19:30",
+    time: "20:30",
     modality: "Zoom",
     materials: "Tapete y manta",
     durationMinutes: 50,

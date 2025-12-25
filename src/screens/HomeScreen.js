@@ -78,7 +78,7 @@ export default function HomeScreen() {
 
       <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Clases Populares</Text>
 
-      {classes.map((item) => (
+      {classes.slice(0, 4).map((item) => (
         <DestinationCard key={item.id} item={item} onPress={() => openClassDetails(item)} />
       ))}
 
