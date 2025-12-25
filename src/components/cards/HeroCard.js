@@ -41,7 +41,7 @@ export default function HeroCard({ item, onOpenDetails, onJoinLive }) {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 24,
+    marginHorizontal: 18,
     borderRadius: 20,
     overflow: "hidden",
     backgroundColor: colors.lightGray,

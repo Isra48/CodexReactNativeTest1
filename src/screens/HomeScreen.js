@@ -66,17 +66,17 @@ export default function HomeScreen() {
 
       <HeroCard item={featured} onOpenDetails={openClassDetails} onJoinLive={handleJoinLive} />
 
-      <Text style={globalStyles.sectionTitle}>Eventos presenciales</Text>
+      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Eventos presenciales</Text>
 
       <FlatList
         horizontal
         data={categories}
         keyExtractor={(i) => i.id}
-        contentContainerStyle={{ paddingLeft: 24, paddingBottom: 20 }}
+        contentContainerStyle={styles.categoryListContent}
         renderItem={({ item }) => <CategoryCard item={item} onPress={() => {}} />}
       />
 
-      <Text style={globalStyles.sectionTitle}>Clases Populares</Text>
+      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Clases Populares</Text>
 
       {classes.map((item) => (
         <DestinationCard key={item.id} item={item} onPress={() => openClassDetails(item)} />
@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
   homeHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 72,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 64,
+    paddingBottom: 12,
   },
 
   homeTitle: {
@@ -129,6 +129,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightGray,
     alignItems: "center",
     justifyContent: "center",
+  },
+  sectionTitle: {
+    marginLeft: 16,
+    marginBottom: 8,
+  },
+  categoryListContent: {
+    paddingLeft: 16,
+    paddingBottom: 12,
   },
 
   modalOverlay: {
