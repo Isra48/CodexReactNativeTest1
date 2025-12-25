@@ -31,7 +31,7 @@ export const classes = [
     modality: "Zoom",
     materials: "Tapete y manta",
     durationMinutes: 50,
-    startDateTime: "2025-12-24T19:25:00-06:00",
+    startDateTime: "2025-12-24T20:30:00-06:00",
     zoomLink: "https://zoom.us/j/987654321",
     isFeatured: true,
     image:

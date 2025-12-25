@@ -3,12 +3,25 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import colors from "../../constants/colors";
 import { shouldShowJoinCTA, useClassCTAState } from "../../utils/classCta";
 
+const getBadgeConfig = (state) => {
+  switch (state) {
+    case "starting_soon":
+      return { text: "Por comenzar", color: "#24244A" };
+    case "live":
+      return { text: "En curso", color: "#C35B4A" };
+    case "upcoming":
+    default:
+      return { text: "Próxima clase", color: colors.secondary };
+  }
+};
+
 export default function HeroCard({ item, onOpenDetails, onJoinLive }) {
   if (!item) return null;
 
   const classState = useClassCTAState(item);
   const isJoinable = shouldShowJoinCTA(item, classState);
   const ctaLabel = isJoinable ? "Entrar a la clase" : "Ver detalles";
+  const badgeConfig = getBadgeConfig(classState);
 
   const handleCtaPress = () => {
     if (isJoinable) {
@@ -22,8 +35,8 @@ export default function HeroCard({ item, onOpenDetails, onJoinLive }) {
     <View style={styles.card}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.overlay}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Proxima Clase</Text>
+        <View style={[styles.badge, { backgroundColor: badgeConfig.color }]}>
+          <Text style={styles.badgeText}>{badgeConfig.text}</Text>
         </View>
 
         <View style={styles.textBlock}>
