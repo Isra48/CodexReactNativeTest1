@@ -103,6 +103,12 @@ const sortByStartDate = (a, b) => {
   return aTime - bTime;
 };
 
+const sortByStartDateDesc = (a, b) => {
+  const aTime = new Date(a.startDateTime).getTime();
+  const bTime = new Date(b.startDateTime).getTime();
+  return bTime - aTime;
+};
+
 export const getUpcomingClasses = (now = new Date()) =>
   classes
     .filter((item) => new Date(item.startDateTime) >= now)
@@ -113,7 +119,7 @@ export const getPastClasses = (now = new Date()) =>
   classes
     .filter((item) => new Date(item.startDateTime) < now)
     .slice()
-    .sort(sortByStartDate);
+    .sort(sortByStartDateDesc);
 
 export const getNextClass = (now = new Date()) => {
   const featured = classes.find((item) => item.isFeatured);
