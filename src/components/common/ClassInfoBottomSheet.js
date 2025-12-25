@@ -34,7 +34,10 @@ const ClassInfoBottomSheet = ({ visible, onClose, classInfo }) => {
   if (!classInfo) return null;
 
   const displayDate = (() => {
-    if (classInfo.date) return classInfo.date;
+    if (classInfo.date || classInfo.time) {
+      if (classInfo.date && classInfo.time) return `${classInfo.date} - ${classInfo.time}`;
+      return classInfo.date || classInfo.time;
+    }
     if (classInfo.startDateTime) {
       const start = new Date(classInfo.startDateTime);
       if (!Number.isNaN(start.getTime())) {
@@ -50,10 +53,11 @@ const ClassInfoBottomSheet = ({ visible, onClose, classInfo }) => {
   const addToCalendar = () => {
     if (!classInfo.startDateTime) return;
     const start = new Date(classInfo.startDateTime);
-    const end = new Date(start.getTime() + (classInfo.duration || 60) * 60000);
+    const durationMinutes = classInfo.durationMinutes ?? 60;
+    const end = new Date(start.getTime() + durationMinutes * 60000);
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
       classInfo.title
-    )}&details=${encodeURIComponent(classInfo.link || "https://zoom.us/j/123456789")}&dates=${start
+    )}&details=${encodeURIComponent(classInfo.zoomLink || "https://zoom.us/j/123456789")}&dates=${start
       .toISOString()
       .replace(/[-:]|\\.\d{3}/g, "")}/${end.toISOString().replace(/[-:]|\\.\d{3}/g, "")}`;
 
@@ -61,8 +65,8 @@ const ClassInfoBottomSheet = ({ visible, onClose, classInfo }) => {
   };
 
   const copyLink = () => {
-    if (classInfo.link) {
-      Clipboard.setString(classInfo.link);
+    if (classInfo.zoomLink) {
+      Clipboard.setString(classInfo.zoomLink);
     }
   };
 
@@ -95,7 +99,7 @@ const ClassInfoBottomSheet = ({ visible, onClose, classInfo }) => {
             <View style={styles.detailText}>
               <Text style={styles.detailLabel}>Duración</Text>
               <Text style={styles.detailValue}>
-                {classInfo.duration ? `${classInfo.duration} min` : "Por confirmar"}
+                {classInfo.durationMinutes ? `${classInfo.durationMinutes} min` : "Por confirmar"}
               </Text>
             </View>
           </View>

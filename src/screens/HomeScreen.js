@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, FlatList, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
 import colors from "../constants/colors";
-import { categories, destinations } from "../constants/data";
+import { categories, classes, getNextClass } from "../constants/data";
 import HeroCard from "../components/cards/HeroCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
@@ -18,7 +18,7 @@ export default function HomeScreen() {
   const { shouldShowPermissionPrompt, requestPermissions, markPromptSeen, scheduleClassNotifications } =
     useNotifications();
 
-  const featured = useMemo(() => destinations[0], []);
+  const featured = useMemo(() => getNextClass(), []);
 
   useEffect(() => {
     if (shouldShowPermissionPrompt) {
@@ -44,11 +44,7 @@ export default function HomeScreen() {
 
   const openClassDetails = (classItem) => {
     if (!classItem) return;
-    const formattedDate = classItem.date
-      ? `${classItem.date}${classItem.time ? ` - ${classItem.time}` : ""}`
-      : null;
-
-    setSelectedClass({ ...classItem, ...(formattedDate ? { date: formattedDate } : {}) });
+    setSelectedClass(classItem);
   };
 
   const handleJoinLive = (classItem) => {
@@ -82,7 +78,7 @@ export default function HomeScreen() {
 
       <Text style={globalStyles.sectionTitle}>Clases Populares</Text>
 
-      {destinations.map((item) => (
+      {classes.map((item) => (
         <DestinationCard key={item.id} item={item} onPress={() => openClassDetails(item)} />
       ))}
 

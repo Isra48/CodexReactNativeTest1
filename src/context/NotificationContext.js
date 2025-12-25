@@ -108,6 +108,7 @@ export function NotificationProvider({ children }) {
     async (classInfo) => {
       if (!pushEnabled || permissionStatus !== "granted" || !classInfo?.startDateTime) return;
       if (classInfo.modality && classInfo.modality.toLowerCase() !== "zoom") return;
+      if (!classInfo.zoomLink) return;
 
       const startDate = new Date(classInfo.startDateTime);
       if (Number.isNaN(startDate.getTime()) || startDate <= new Date()) return;
@@ -117,7 +118,7 @@ export function NotificationProvider({ children }) {
       const content = {
         title: classInfo.title,
         body: classInfo.description || "Tu clase está por comenzar",
-        data: { link: classInfo.link || "https://zoom.us/j/123456789" },
+        data: { link: classInfo.zoomLink || "https://zoom.us/j/123456789" },
       };
 
       const triggers = [startDate];

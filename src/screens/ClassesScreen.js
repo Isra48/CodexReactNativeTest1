@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { pastClasses, upcomingClasses } from "../constants/data";
+import { getPastClasses, getUpcomingClasses } from "../constants/data";
 import ClassCard from "../components/cards/ClassCard";
 import { globalStyles } from "../styles/globalStyles";
 import colors from "../constants/colors";
@@ -9,12 +9,11 @@ import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
 export default function ClassesScreen() {
   const [tab, setTab] = useState("upcoming");
   const [selectedClass, setSelectedClass] = useState(null);
-  const data = tab === "upcoming" ? upcomingClasses : pastClasses;
+  const data = tab === "upcoming" ? getUpcomingClasses() : getPastClasses();
 
   const openClassDetails = (item) => {
     if (!item) return;
-    const formattedDate = item.date ? `${item.date}${item.time ? ` - ${item.time}` : ""}` : item.title;
-    setSelectedClass({ ...item, date: formattedDate });
+    setSelectedClass(item);
   };
 
   return (

@@ -1,42 +1,17 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import colors from "../../constants/colors";
-
-const THIRTY_MINUTES_MS = 30 * 60 * 1000;
-
-const getClassState = (classItem) => {
-  if (!classItem) return "future";
-  if (classItem.live) return "live";
-
-  if (classItem.startDateTime) {
-    const start = new Date(classItem.startDateTime);
-    if (!Number.isNaN(start.getTime())) {
-      const now = new Date();
-      const diffMs = start.getTime() - now.getTime();
-      const durationMs = (classItem.duration || 60) * 60000;
-
-      if (diffMs <= 0 && Math.abs(diffMs) <= durationMs) {
-        return "live";
-      }
-
-      if (diffMs > 0 && diffMs <= THIRTY_MINUTES_MS) {
-        return "soon";
-      }
-    }
-  }
-
-  return "future";
-};
+import { shouldShowJoinCTA, useClassCTAState } from "../../utils/classCta";
 
 export default function HeroCard({ item, onOpenDetails, onJoinLive }) {
   if (!item) return null;
 
-  const classState = getClassState(item);
-  const isLive = classState === "live";
-  const ctaLabel = isLive ? "Entrar a la clase" : classState === "soon" ? "Entrar pronto" : "Ver detalles";
+  const classState = useClassCTAState(item);
+  const isJoinable = shouldShowJoinCTA(item, classState);
+  const ctaLabel = isJoinable ? "Entrar a la clase" : "Ver detalles";
 
   const handleCtaPress = () => {
-    if (isLive) {
+    if (isJoinable) {
       if (onJoinLive) onJoinLive(item);
       return;
     }
