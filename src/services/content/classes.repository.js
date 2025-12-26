@@ -1,69 +1,86 @@
 import { isMockSource } from "../../config/env";
 import * as classesService from "./classes.service";
 import { mockClasses } from "../../constants/data";
+import { computeClassStatus } from "../../utils/scheduling";
 
-/**
- * Utilidad: ordenar fechas
- */
+/* =========================
+   Utilidades
+========================= */
+const now = () => new Date();
+
 const byDateAsc = (a, b) =>
   new Date(a.startDateTime) - new Date(b.startDateTime);
 
 const byDateDesc = (a, b) =>
   new Date(b.startDateTime) - new Date(a.startDateTime);
 
-/**
- * HERO:
- * - Si hay futuras → la más cercana
- * - Si no → la pasada más reciente
- */
+/* =========================
+   HERO (Home)
+========================= */
 export const getHeroClass = async () => {
-  const now = new Date();
-
   const classes = isMockSource()
     ? mockClasses
     : await classesService.getClasses({ upcomingOnly: false });
 
-  if (!classes || classes.length === 0) return null;
+  if (!classes?.length) return null;
 
   const future = classes
-    .filter(c => new Date(c.startDateTime) > now)
+    .filter(c => new Date(c.startDateTime) > now())
     .sort(byDateAsc);
 
-  if (future.length > 0) {
-    return future[0];
-  }
-
-  const past = classes
-    .filter(c => new Date(c.startDateTime) <= now)
-    .sort(byDateDesc);
-
-  return past[0] || null;
-};
-
-/**
- * LISTADO HOME:
- * - Futuras si existen
- * - Si no → pasadas
- */
-export const getHomeClasses = async ({ limit = 4 } = {}) => {
-  const now = new Date();
-
-  const classes = isMockSource()
-    ? mockClasses
-    : await classesService.getClasses({ upcomingOnly: false });
-
-  if (!classes || classes.length === 0) return [];
-
-  const future = classes
-    .filter(c => new Date(c.startDateTime) > now)
-    .sort(byDateAsc);
-
-  if (future.length > 0) {
-    return future.slice(0, limit);
-  }
+  if (future.length) return future[0];
 
   return classes
-    .filter(c => new Date(c.startDateTime) <= now)
+    .filter(c => new Date(c.startDateTime) <= now())
+    .sort(byDateDesc)[0] || null;
+};
+
+/* =========================
+   HOME LIST
+========================= */
+export const getHomeClasses = async ({ limit = 4 } = {}) => {
+  const classes = isMockSource()
+    ? mockClasses
+    : await classesService.getClasses({ upcomingOnly: false });
+
+  if (!classes?.length) return [];
+
+  const future = classes
+    .filter(c => new Date(c.startDateTime) > now())
+    .sort(byDateAsc);
+
+  if (future.length) return future.slice(0, limit);
+
+  return classes
+    .filter(c => new Date(c.startDateTime) <= now())
     .sort(byDateDesc)
     .slice(0, limit);
+};
+
+/* =========================
+   CLASSES SCREEN
+========================= */
+export const getUpcomingClasses = async ({ limit = 50 } = {}) => {
+  const all = await classesService.getClasses({
+    upcomingOnly: false, // 👈 TRAE TODAS
+  });
+
+  const nowRelevant = all.filter((c) => {
+    const status = computeClassStatus(c.startDateTime);
+    return status === "future" || status === "startingSoon" || status === "live";
+  });
+
+  return nowRelevant
+    .sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime))
+    .slice(0, limit);
+};
+
+export const getPastClasses = async () => {
+  const classes = isMockSource()
+    ? mockClasses
+    : await classesService.getClasses({ upcomingOnly: false });
+
+  return classes
+    .filter(c => new Date(c.startDateTime) <= now())
+    .sort(byDateDesc);
 };
