@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, FlatList, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
 import colors from "../constants/colors";
-import { categories, classes, getNextClass } from "../constants/data";
+import { categories, classes as mockClasses, getNextClass as getNextMockClass } from "../constants/data";
 import HeroCard from "../components/cards/HeroCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
@@ -10,15 +10,44 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useNotifications } from "../context/NotificationContext";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
+import { getNextClass, getUpcomingClasses } from "../services/content/classes.repository";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [featured, setFeatured] = useState(() => getNextMockClass());
+  const [classList, setClassList] = useState(() => mockClasses.slice(0, 4));
   const { shouldShowPermissionPrompt, requestPermissions, markPromptSeen, scheduleClassNotifications } =
     useNotifications();
 
-  const featured = useMemo(() => getNextClass(), []);
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrateContent = async () => {
+      try {
+        const [nextClass, upcoming] = await Promise.all([
+          getNextClass(),
+          getUpcomingClasses({ limit: 4 }),
+        ]);
+
+        if (!isMounted) return;
+        if (nextClass) setFeatured(nextClass);
+        if (upcoming?.length) setClassList(upcoming);
+      } catch (error) {
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn("Content fetch failed", error);
+        }
+      }
+    };
+
+    hydrateContent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (shouldShowPermissionPrompt) {
@@ -78,7 +107,7 @@ export default function HomeScreen() {
 
       <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Clases Populares</Text>
 
-      {classes.slice(0, 4).map((item) => (
+      {classList.map((item) => (
         <DestinationCard key={item.id} item={item} onPress={() => openClassDetails(item)} />
       ))}
 
