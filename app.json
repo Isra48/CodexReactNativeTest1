@@ -6,7 +6,11 @@
     "orientation": "portrait",
     "platforms": ["ios", "android", "web"],
     "assetBundlePatterns": ["**/*"],
-    "plugins": ["expo-secure-store"]
-
+    "plugins": ["expo-secure-store"],
+    "extra": {
+      "STRAPI_URL": "",
+      "STRAPI_API_TOKEN": "",
+      "CONTENT_SOURCE": "mock"
+    }
   }
 }

@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { getPastClasses, getUpcomingClasses } from "../constants/data";
+import {
+  getPastClasses as getPastClassesFromRepository,
+  getUpcomingClasses as getUpcomingClassesFromRepository,
+} from "../services/content/classes.repository";
+import { getPastClasses as getPastMockClasses, getUpcomingClasses as getUpcomingMockClasses } from "../constants/data";
 import ClassCard from "../components/cards/ClassCard";
 import { globalStyles } from "../styles/globalStyles";
 import colors from "../constants/colors";
@@ -9,7 +13,30 @@ import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
 export default function ClassesScreen() {
   const [tab, setTab] = useState("upcoming");
   const [selectedClass, setSelectedClass] = useState(null);
-  const data = tab === "upcoming" ? getUpcomingClasses() : getPastClasses();
+  const [upcoming, setUpcoming] = useState(() => getUpcomingMockClasses());
+  const [past, setPast] = useState(() => getPastMockClasses());
+
+  const loadClasses = useCallback(async () => {
+    try {
+      const [upcomingData, pastData] = await Promise.all([
+        getUpcomingClassesFromRepository(),
+        getPastClassesFromRepository(),
+      ]);
+      if (upcomingData?.length) setUpcoming(upcomingData);
+      if (pastData?.length) setPast(pastData);
+    } catch (error) {
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.warn("Classes fetch failed", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClasses();
+  }, [loadClasses]);
+
+  const data = tab === "upcoming" ? upcoming : past;
 
   const openClassDetails = (item) => {
     if (!item) return;
