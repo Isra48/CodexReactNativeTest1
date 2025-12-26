@@ -25,3 +25,5 @@ export const config = {
   strapiToken: getStrapiToken(),
   contentSource: getContentSource(),
 };
+console.log("EXPO EXTRA:", Constants.expoConfig?.extra);
+console.log("CONTENT_SOURCE:", getContentSource());

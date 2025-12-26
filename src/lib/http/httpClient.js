@@ -1,6 +1,6 @@
 import { config, getStrapiToken, getStrapiUrl } from "../../config/env";
 
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 75000;
 
 const withTimeout = async (promise, timeoutMs = DEFAULT_TIMEOUT_MS) => {
   let timeoutId;

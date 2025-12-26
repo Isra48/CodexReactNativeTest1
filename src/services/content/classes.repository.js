@@ -1,44 +1,69 @@
-import { getContentSource, isMockSource } from "../../config/env";
-import {
-  classes as mockClasses,
-  getNextClass as getNextMockClass,
-  getPastClasses as getPastMockClasses,
-  getUpcomingClasses as getUpcomingMockClasses,
-} from "../../constants/data";
+import { isMockSource } from "../../config/env";
 import * as classesService from "./classes.service";
+import { mockClasses } from "../../constants/data";
 
-const wrapMockPromise = (data) => Promise.resolve(data);
+/**
+ * Utilidad: ordenar fechas
+ */
+const byDateAsc = (a, b) =>
+  new Date(a.startDateTime) - new Date(b.startDateTime);
 
-export const getUpcomingClasses = async (options = {}) => {
-  if (isMockSource()) {
-    const now = options.now || new Date();
-    const list = getUpcomingMockClasses(now);
-    return options.limit ? list.slice(0, options.limit) : list;
+const byDateDesc = (a, b) =>
+  new Date(b.startDateTime) - new Date(a.startDateTime);
+
+/**
+ * HERO:
+ * - Si hay futuras → la más cercana
+ * - Si no → la pasada más reciente
+ */
+export const getHeroClass = async () => {
+  const now = new Date();
+
+  const classes = isMockSource()
+    ? mockClasses
+    : await classesService.getClasses({ upcomingOnly: false });
+
+  if (!classes || classes.length === 0) return null;
+
+  const future = classes
+    .filter(c => new Date(c.startDateTime) > now)
+    .sort(byDateAsc);
+
+  if (future.length > 0) {
+    return future[0];
   }
-  return classesService.getClasses({ upcomingOnly: true, limit: options.limit });
+
+  const past = classes
+    .filter(c => new Date(c.startDateTime) <= now)
+    .sort(byDateDesc);
+
+  return past[0] || null;
 };
 
-export const getPastClasses = async (options = {}) => {
-  if (isMockSource()) {
-    const now = options.now || new Date();
-    return wrapMockPromise(getPastMockClasses(now));
-  }
-  return classesService.getClasses({ upcomingOnly: false });
-};
+/**
+ * LISTADO HOME:
+ * - Futuras si existen
+ * - Si no → pasadas
+ */
+export const getHomeClasses = async ({ limit = 4 } = {}) => {
+  const now = new Date();
 
-export const getNextClass = async () => {
-  if (isMockSource()) {
-    return wrapMockPromise(getNextMockClass());
-  }
-  const classes = await classesService.getClasses({ upcomingOnly: true, limit: 1 });
-  return classes[0] || null;
-};
+  const classes = isMockSource()
+    ? mockClasses
+    : await classesService.getClasses({ upcomingOnly: false });
 
-export const getClassById = async (id) => {
-  if (isMockSource()) {
-    return wrapMockPromise(mockClasses.find((item) => item.id === id) || null);
-  }
-  return classesService.getClassById(id);
-};
+  if (!classes || classes.length === 0) return [];
 
-export const getContentSourceLabel = () => getContentSource();
+  const future = classes
+    .filter(c => new Date(c.startDateTime) > now)
+    .sort(byDateAsc);
+
+  if (future.length > 0) {
+    return future.slice(0, limit);
+  }
+
+  return classes
+    .filter(c => new Date(c.startDateTime) <= now)
+    .sort(byDateDesc)
+    .slice(0, limit);
+};

@@ -1,60 +1,92 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, FlatList, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+
 import colors from "../constants/colors";
-import { categories, classes as mockClasses, getNextClass as getNextMockClass } from "../constants/data";
+import { categories } from "../constants/data";
+import { globalStyles } from "../styles/globalStyles";
+
 import HeroCard from "../components/cards/HeroCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
-import { globalStyles } from "../styles/globalStyles";
-import { useNavigation } from "@react-navigation/native";
-import { Feather } from "@expo/vector-icons";
-import { useNotifications } from "../context/NotificationContext";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
-import { getNextClass, getUpcomingClasses } from "../services/content/classes.repository";
+
+import {
+  getHeroClass,
+  getHomeClasses,
+} from "../services/content/classes.repository";
+
+
+import { useNotifications } from "../context/NotificationContext";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
-  const [featured, setFeatured] = useState(() => getNextMockClass());
-  const [classList, setClassList] = useState(() => mockClasses.slice(0, 4));
-  const { shouldShowPermissionPrompt, requestPermissions, markPromptSeen, scheduleClassNotifications } =
-    useNotifications();
+  const [featured, setFeatured] = useState(null);
+  const [classList, setClassList] = useState([]);
 
-  useEffect(() => {
-    let isMounted = true;
+  const {
+    shouldShowPermissionPrompt,
+    requestPermissions,
+    markPromptSeen,
+    scheduleClassNotifications,
+  } = useNotifications();
 
-    const hydrateContent = async () => {
-      try {
-        const [nextClass, upcoming] = await Promise.all([
-          getNextClass(),
-          getUpcomingClasses({ limit: 4 }),
-        ]);
+useEffect(() => {
+  let isMounted = true;
 
-        if (!isMounted) return;
-        if (nextClass) setFeatured(nextClass);
-        if (upcoming?.length) setClassList(upcoming);
-      } catch (error) {
-        if (__DEV__) {
-          // eslint-disable-next-line no-console
-          console.warn("Content fetch failed", error);
-        }
+  const hydrateContent = async () => {
+    try {
+      const [hero, list] = await Promise.all([
+        getHeroClass(),
+        getHomeClasses({ limit: 4 }),
+      ]);
+
+      if (!isMounted) return;
+
+      setFeatured(hero);
+      setClassList(list.filter(item => item.id !== hero?.id));
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Home content fetch failed");
+        console.error(error);
       }
-    };
+    }
+  };
 
-    hydrateContent();
+  hydrateContent();
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
+  
+
+  /**
+   * Mostrar modal de permisos de notificaciones
+   */
   useEffect(() => {
     if (shouldShowPermissionPrompt) {
       setPermissionModalVisible(true);
     }
   }, [shouldShowPermissionPrompt]);
 
+  /**
+   * Agendar notificaciones para la clase destacada
+   */
   useEffect(() => {
     if (featured) {
       scheduleClassNotifications(featured);
@@ -76,51 +108,91 @@ export default function HomeScreen() {
     setSelectedClass(classItem);
   };
 
-  const handleJoinLive = (classItem) => {
-    if (!classItem) return;
-    Alert.alert("Entrar a la clase", "Aquí abriremos Zoom cuando esté listo.");
+  const handleJoinLive = () => {
+    Alert.alert(
+      "Entrar a la clase",
+      "Aquí se abrirá Zoom cuando la clase esté en vivo."
+    );
   };
 
   return (
     <ScrollView style={globalStyles.container}>
+      {/* Header */}
       <View style={styles.homeHeader}>
-        <TouchableOpacity onPress={() => navigation.navigate("ProfileEditor")} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ProfileEditor")}
+          activeOpacity={0.7}
+        >
           <View style={styles.smallAvatar}>
             <Feather name="user" size={24} color="#000" />
           </View>
         </TouchableOpacity>
+
         <Text style={styles.homeTitle}>MindCo</Text>
         <Feather name="search" size={24} color="#000" />
       </View>
 
-      <HeroCard item={featured} onOpenDetails={openClassDetails} onJoinLive={handleJoinLive} />
+      {/* Hero */}
+      {featured && (
+        <HeroCard
+          item={featured}
+          onOpenDetails={openClassDetails}
+          onJoinLive={handleJoinLive}
+        />
+      )}
 
-      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Eventos presenciales</Text>
+      {/* Categorías */}
+      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
+        Eventos presenciales
+      </Text>
 
       <FlatList
         horizontal
         data={categories}
-        keyExtractor={(i) => i.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.categoryListContent}
-        renderItem={({ item }) => <CategoryCard item={item} onPress={() => {}} />}
+        renderItem={({ item }) => (
+          <CategoryCard item={item} onPress={() => {}} />
+        )}
+        showsHorizontalScrollIndicator={false}
       />
 
-      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>Clases Populares</Text>
+      {/* Próximas clases */}
+      {classList.length > 0 && (
+        <>
+          <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
+            Próximas clases
+          </Text>
 
-      {classList.map((item) => (
-        <DestinationCard key={item.id} item={item} onPress={() => openClassDetails(item)} />
-      ))}
+          {classList.map((item) => (
+            <DestinationCard
+              key={item.id}
+              item={item}
+              onPress={() => openClassDetails(item)}
+            />
+          ))}
+        </>
+      )}
 
+      {/* Modal permisos notificaciones */}
       <Modal transparent visible={permissionModalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.permissionModal}>
             <Text style={styles.modalTitle}>Recibe recordatorios</Text>
-            <Text style={styles.modalText}>Obtén notificaciones para no perder tus clases.</Text>
+            <Text style={styles.modalText}>
+              Obtén notificaciones para no perder tus clases.
+            </Text>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.secondaryButton} onPress={handleDismissPermission}>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={handleDismissPermission}
+              >
                 <Text style={styles.secondaryText}>Ahora no</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.primaryButton} onPress={handleEnableNotifications}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleEnableNotifications}
+              >
                 <Text style={styles.primaryText}>Activar</Text>
               </TouchableOpacity>
             </View>
@@ -128,6 +200,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
+      {/* Bottom sheet */}
       <ClassInfoBottomSheet
         visible={!!selectedClass}
         onClose={() => setSelectedClass(null)}
@@ -145,12 +218,10 @@ const styles = StyleSheet.create({
     paddingTop: 64,
     paddingBottom: 12,
   },
-
   homeTitle: {
     fontSize: 24,
     fontWeight: "400",
   },
-
   smallAvatar: {
     width: 40,
     height: 40,
@@ -167,7 +238,6 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingBottom: 12,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -185,9 +255,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
-  modalText: { color: colors.gray, marginBottom: 16 },
-  modalActions: { flexDirection: "row", justifyContent: "flex-end" },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  modalText: {
+    color: colors.gray,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
   primaryButton: {
     backgroundColor: colors.primary,
     paddingVertical: 10,
@@ -195,7 +275,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginLeft: 10,
   },
-  primaryText: { color: colors.white, fontWeight: "600" },
+  primaryText: {
+    color: colors.white,
+    fontWeight: "600",
+  },
   secondaryButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -203,5 +286,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.lightGray,
   },
-  secondaryText: { color: colors.gray },
+  secondaryText: {
+    color: colors.gray,
+  },
 });

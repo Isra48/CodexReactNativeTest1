@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import colors from "../../constants/colors";
-import { shouldShowJoinCTA, useClassCTAState } from "../../utils/classCta";
 
 const getBadgeConfig = (state) => {
   switch (state) {
@@ -14,43 +13,80 @@ const getBadgeConfig = (state) => {
       return { text: "Próxima clase", color: colors.secondary };
   }
 };
+const getClassState = (item) => {
+  if (!item?.startDateTime) return "upcoming";
+
+  const now = new Date();
+  const start = new Date(item.startDateTime);
+
+  if (Number.isNaN(start.getTime())) return "upcoming";
+
+  const diffMinutes = (start - now) / 60000;
+
+  if (diffMinutes <= 0 && diffMinutes >= -90) return "live";
+  if (diffMinutes > 0 && diffMinutes <= 30) return "starting_soon";
+
+  return "upcoming";
+};
+
 
 export default function HeroCard({ item, onOpenDetails, onJoinLive }) {
   if (!item) return null;
 
-  const classState = useClassCTAState(item);
-  const isJoinable = shouldShowJoinCTA(item, classState);
+  const classState = getClassState(item);
+  const isJoinable = classState === "live";
   const ctaLabel = isJoinable ? "Entrar a la clase" : "Ver detalles";
   const badgeConfig = getBadgeConfig(classState);
 
   const handleCtaPress = () => {
     if (isJoinable) {
-      if (onJoinLive) onJoinLive(item);
-      return;
+      onJoinLive?.(item);
+    } else {
+      onOpenDetails?.(item);
     }
-    if (onOpenDetails) onOpenDetails(item);
   };
+
+  const hasImage = typeof item.image === "string" && item.image.length > 0;
 
   return (
     <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
+      {hasImage ? (
+        <Image source={{ uri: item.image }} style={styles.image} />
+      ) : (
+        <View
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: colors.lightGray },
+          ]}
+        />
+      )}
+
       <View style={styles.overlay}>
         <View style={[styles.badge, { backgroundColor: badgeConfig.color }]}>
           <Text style={styles.badgeText}>{badgeConfig.text}</Text>
         </View>
 
         <View style={styles.textBlock}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.title}>{item.title || ""}</Text>
+
+          {item.description ? (
+            <Text style={styles.description}>{item.description}</Text>
+          ) : null}
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} activeOpacity={0.9} onPress={handleCtaPress}>
+        <TouchableOpacity
+          style={styles.ctaButton}
+          activeOpacity={0.9}
+          onPress={handleCtaPress}
+        >
           <Text style={styles.ctaText}>{ctaLabel}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   card: {

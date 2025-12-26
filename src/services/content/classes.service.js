@@ -6,7 +6,7 @@ const CLASSES_ENDPOINT = "/api/classes";
 const basePopulate = {
   populate: {
     image: true,
-    instructor: true,
+
   },
 };
 
@@ -32,7 +32,10 @@ export const getClasses = async ({ upcomingOnly, limit } = {}) => {
     sort: { startAt: "asc" },
   });
 
-  return (response?.data || []).map((item) => mapStrapiClassToAppModel(item.attributes, item.id));
+  return (response?.data || []).map((item) =>
+    mapStrapiClassToAppModel(item, item.id)
+  );
+
 };
 
 export const getClassById = async (id) => {
