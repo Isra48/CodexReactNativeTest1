@@ -1,17 +1,34 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground, Alert, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+  Alert,
+  StyleSheet,
+} from "react-native";
+import { Video, ResizeMode } from "expo-av";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import TextField from "../components/common/TextField";
+import SkeletonBlock from "../components/common/SkeletonBlock";
 import colors from "../constants/colors";
 import { setUser } from "../utils/storage";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import loginBg from '../../assets/images/Welcome.png'
+import loginBg from "../../assets/images/Welcome.png";
+import { useLoginContentQuery } from "../services/content/login.queries";
 
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const {
+    data: loginContent,
+    isLoading: isLoginContentLoading,
+    isFetching: isLoginContentFetching,
+    isError: isLoginContentError,
+  } = useLoginContentQuery();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -26,11 +43,39 @@ export default function LoginScreen({ navigation }) {
     navigation.reset({ index: 0, routes: [{ name: "ProfileEditor" }] });
   };
 
+  const showLoginSkeleton =
+    !loginContent?.title &&
+    (isLoginContentLoading || isLoginContentFetching || isLoginContentError);
+  const title = loginContent?.title || "MindCo";
+  const description = loginContent?.description || "Explora tu nueva comunidad.";
+  const backgroundMedia = loginContent?.backgroundMedia;
+  const isVideoBackground =
+    backgroundMedia?.type === "video" && backgroundMedia?.url;
+  const backgroundSource = backgroundMedia?.url
+    ? typeof backgroundMedia.url === "number"
+      ? backgroundMedia.url
+      : { uri: backgroundMedia.url }
+    : loginBg;
+
   return (
-    <ImageBackground source={loginBg}
-     style={styles.heroContainer}>
-     
-     
+    <View style={styles.heroContainer}>
+      {isVideoBackground ? (
+        <Video
+          source={backgroundSource}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping
+          isMuted
+        />
+      ) : (
+        <ImageBackground
+          source={backgroundSource}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode="cover"
+        />
+      )}
+
       <View style={styles.loginOverlay} />
 
       <KeyboardAvoidingView
@@ -44,8 +89,17 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.loginWrapper}>
             {/* TEXTO FUERA DEL FORM */}
             <View style={styles.loginHeader}>
-              <Text style={styles.heroTitle}>MindCo</Text>
-              <Text style={styles.heroSubtitle}>Explora tu nueva comunidad.</Text>
+              {showLoginSkeleton ? (
+                <>
+                  <SkeletonBlock style={styles.loginTitleSkeleton} />
+                  <SkeletonBlock style={styles.loginSubtitleSkeleton} />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.heroTitle}>{title}</Text>
+                  <Text style={styles.heroSubtitle}>{description}</Text>
+                </>
+              )}
             </View>
 
             {/* FORM */}
@@ -76,7 +130,7 @@ export default function LoginScreen({ navigation }) {
         </ScrollView>
 
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </View>
   );
 }
 
@@ -111,6 +165,17 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     fontSize: 16,
     color: colors.white,
+  },
+  loginTitleSkeleton: {
+    height: 40,
+    borderRadius: 10,
+    width: 180,
+    marginBottom: 10,
+  },
+  loginSubtitleSkeleton: {
+    height: 16,
+    borderRadius: 8,
+    width: 220,
   },
   loginForm: {
     backgroundColor: colors.white,
