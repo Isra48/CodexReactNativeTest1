@@ -49,12 +49,11 @@ export const getHomeClasses = async ({ limit = 4 } = {}) => {
     .filter(c => new Date(c.startDateTime) > now())
     .sort(byDateAsc);
 
-  if (future.length) return future.slice(0, limit);
-
-  return classes
+  const past = classes
     .filter(c => new Date(c.startDateTime) <= now())
-    .sort(byDateDesc)
-    .slice(0, limit);
+    .sort(byDateDesc);
+
+  return [...future, ...past].slice(0, limit);
 };
 
 /* =========================
@@ -67,7 +66,7 @@ export const getUpcomingClasses = async ({ limit = 50 } = {}) => {
 
   const nowRelevant = all.filter((c) => {
     const status = computeClassStatus(c.startDateTime);
-    return status === "future" || status === "startingSoon" || status === "live";
+    return status === "upcoming" || status === "starting_soon" || status === "live";
   });
 
   return nowRelevant

@@ -57,7 +57,8 @@ useEffect(() => {
       if (!isMounted) return;
 
       setFeatured(hero);
-      setClassList(list.filter(item => item.id !== hero?.id));
+      const filtered = list.filter((item) => item.id !== hero?.id);
+      setClassList(filtered.length ? filtered : list);
     } catch (error) {
       if (__DEV__) {
         console.warn("Home content fetch failed");
@@ -173,6 +174,7 @@ useEffect(() => {
           ))}
         </>
       )}
+
 
       {/* Modal permisos notificaciones */}
       <Modal transparent visible={permissionModalVisible} animationType="fade">

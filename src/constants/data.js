@@ -129,3 +129,5 @@ export const getNextClass = (now = new Date()) => {
 
 export const upcomingClasses = getUpcomingClasses();
 export const pastClasses = getPastClasses();
+
+export const mockClasses = classes;

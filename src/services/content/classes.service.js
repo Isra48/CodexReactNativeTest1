@@ -29,11 +29,11 @@ export const getClasses = async ({ upcomingOnly, limit } = {}) => {
     ...basePopulate,
     ...filters,
     ...pagination,
-    sort: { startAt: "asc" },
+    sort: ["startAt:asc"],
   });
 
   return (response?.data || []).map((item) =>
-    mapStrapiClassToAppModel(item, item.id)
+    mapStrapiClassToAppModel(item?.attributes || {}, item.id)
   );
 
 };
