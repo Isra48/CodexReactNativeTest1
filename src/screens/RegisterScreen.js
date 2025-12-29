@@ -1,17 +1,34 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground, Alert, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+  Alert,
+  StyleSheet,
+} from "react-native";
+import { Video, ResizeMode } from "expo-av";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import TextField from "../components/common/TextField";
+import SkeletonBlock from "../components/common/SkeletonBlock";
 import colors from "../constants/colors";
 import { setUser } from "../utils/storage";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import loginBg from '../../assets/images/Welcome.png'
+import loginBg from "../../assets/images/Welcome.png";
+import { useRegisterContentQuery } from "../services/content/register.queries";
 
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const {
+    data: registerContent,
+    isLoading: isRegisterContentLoading,
+    isFetching: isRegisterContentFetching,
+    isError: isRegisterContentError,
+  } = useRegisterContentQuery();
 
   const handleRegister = async () => {
     if (!email || !password || !confirm) {
@@ -30,25 +47,65 @@ export default function RegisterScreen({ navigation }) {
     navigation.reset({ index: 0, routes: [{ name: "ProfileEditor" }] });
   };
 
-  return (
-   <ImageBackground source={loginBg} style={styles.heroContainer}>
-  <View style={styles.loginOverlay} />
+  const showRegisterSkeleton =
+    !registerContent?.title &&
+    (isRegisterContentLoading ||
+      isRegisterContentFetching ||
+      isRegisterContentError);
+  const title = registerContent?.title || "Crear cuenta";
+  const description =
+    registerContent?.description || "Únete a nuestra comunidad MindCo";
+  const backgroundMedia = registerContent?.backgroundMedia;
+  const isVideoBackground =
+    backgroundMedia?.type === "video" && backgroundMedia?.url;
+  const backgroundSource = backgroundMedia?.url
+    ? typeof backgroundMedia.url === "number"
+      ? backgroundMedia.url
+      : { uri: backgroundMedia.url }
+    : loginBg;
 
-  <ScrollView
-    contentContainerStyle={styles.loginContent}
-    keyboardShouldPersistTaps="handled"
-  >
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.loginWrapper}>
-        {/* HEADER */}
-        <View style={styles.loginHeader}>
-          <Text style={styles.heroTitle}>Crear cuenta</Text>
-          <Text style={styles.heroSubtitle}>
-            Únete a nuestra comunidad MindCo
-          </Text>
-        </View>
+  return (
+    <View style={styles.heroContainer}>
+      {isVideoBackground ? (
+        <Video
+          source={backgroundSource}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping
+          isMuted
+        />
+      ) : (
+        <ImageBackground
+          source={backgroundSource}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode="cover"
+        />
+      )}
+      <View style={styles.loginOverlay} />
+
+      <ScrollView
+        contentContainerStyle={styles.loginContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.loginWrapper}>
+            {/* HEADER */}
+            <View style={styles.loginHeader}>
+              {showRegisterSkeleton ? (
+                <>
+                  <SkeletonBlock style={styles.loginTitleSkeleton} />
+                  <SkeletonBlock style={styles.loginSubtitleSkeleton} />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.heroTitle}>{title}</Text>
+                  <Text style={styles.heroSubtitle}>{description}</Text>
+                </>
+              )}
+            </View>
 
         {/* FORM */}
         <View style={styles.loginForm}>
@@ -76,10 +133,10 @@ export default function RegisterScreen({ navigation }) {
             <Text style={styles.linkText}>Ya tengo cuenta</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAvoidingView>
-  </ScrollView>
-</ImageBackground>
+          </View>
+        </KeyboardAvoidingView>
+      </ScrollView>
+    </View>
 
   );
 }
@@ -113,6 +170,17 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     fontSize: 16,
     color: colors.white,
+  },
+  loginTitleSkeleton: {
+    height: 40,
+    borderRadius: 10,
+    width: 180,
+    marginBottom: 10,
+  },
+  loginSubtitleSkeleton: {
+    height: 16,
+    borderRadius: 8,
+    width: 220,
   },
   loginForm: {
     backgroundColor: colors.white,

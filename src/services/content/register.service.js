@@ -1,7 +1,7 @@
 import { strapiApi } from "../api/strapiApi";
 import { extractMediaFromAttributes } from "./media";
 
-const LOGIN_ENDPOINT = "/api/login";
+const REGISTER_ENDPOINT = "/api/register";
 
 const pickAttributes = (response) => {
   const payload = response?.data;
@@ -17,8 +17,8 @@ const pickAttributes = (response) => {
   return payload?.attributes || {};
 };
 
-export const getLoginContent = async (params = {}) => {
-  const response = await strapiApi.get(LOGIN_ENDPOINT, {
+export const getRegisterContent = async (params = {}) => {
+  const response = await strapiApi.get(REGISTER_ENDPOINT, {
     fields: ["title", "description"],
     populate: "*",
     ...params,
