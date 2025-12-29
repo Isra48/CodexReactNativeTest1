@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Modal,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -20,6 +21,7 @@ import HeroCard from "../components/cards/HeroCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
+import SkeletonBlock from "../components/common/SkeletonBlock";
 
 import { useHeroClassQuery, useHomeClassesQuery } from "../services/content/classes.queries";
 
@@ -41,8 +43,20 @@ export default function HomeScreen() {
     scheduleClassNotifications,
   } = useNotifications();
 
-  const { data: heroData } = useHeroClassQuery();
-  const { data: homeClasses } = useHomeClassesQuery({ limit: 4 });
+  const {
+    data: heroData,
+    isLoading: isHeroLoading,
+    isFetching: isHeroFetching,
+    isError: isHeroError,
+  } = useHeroClassQuery();
+  const {
+    data: homeClasses,
+    isLoading: isHomeLoading,
+    isFetching: isHomeFetching,
+    isError: isHomeError,
+    refetch,
+  } = useHomeClassesQuery({ limit: 4 });
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     setFeatured(heroData || null);
@@ -50,6 +64,25 @@ export default function HomeScreen() {
     const filtered = list.filter((item) => item.id !== heroData?.id);
     setClassList(filtered.length ? filtered : list);
   }, [heroData, homeClasses]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
+
+  const showHeroSkeleton =
+    !refreshing &&
+    !heroData &&
+    (isHeroLoading || isHeroFetching || isHeroError);
+  const showListSkeleton =
+    !refreshing &&
+    !(homeClasses && homeClasses.length) &&
+    (isHomeLoading || isHomeFetching || isHomeError);
+  const shouldRenderListSection = classList.length > 0 || showListSkeleton;
 
   
 
@@ -94,7 +127,12 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={globalStyles.container}>
+    <ScrollView
+      style={globalStyles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+      }
+    >
       {/* Header */}
       <View style={styles.homeHeader}>
         <TouchableOpacity
@@ -111,12 +149,20 @@ export default function HomeScreen() {
       </View>
 
       {/* Hero */}
-      {featured && (
+      {showHeroSkeleton ? (
+        <View style={styles.heroSkeleton}>
+          <SkeletonBlock style={styles.heroSkeletonImage} />
+          <SkeletonBlock style={styles.heroSkeletonLine} />
+          <SkeletonBlock style={styles.heroSkeletonLineShort} />
+        </View>
+      ) : (
+        featured && (
         <HeroCard
           item={featured}
           onOpenDetails={openClassDetails}
           onJoinLive={handleJoinLive}
         />
+        )
       )}
 
       {/* Categorías */}
@@ -136,19 +182,29 @@ export default function HomeScreen() {
       />
 
       {/* Próximas clases */}
-      {classList.length > 0 && (
+      {shouldRenderListSection && (
         <>
           <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
             Próximas clases
           </Text>
 
-          {classList.map((item) => (
-            <DestinationCard
-              key={item.id}
-              item={item}
-              onPress={() => openClassDetails(item)}
-            />
-          ))}
+          {showListSkeleton
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <View key={`home-skeleton-${index}`} style={styles.listSkeletonCard}>
+                  <SkeletonBlock style={styles.listSkeletonImage} />
+                  <View style={styles.listSkeletonContent}>
+                    <SkeletonBlock style={styles.listSkeletonLine} />
+                    <SkeletonBlock style={styles.listSkeletonLineShort} />
+                  </View>
+                </View>
+              ))
+            : classList.map((item) => (
+                <DestinationCard
+                  key={item.id}
+                  item={item}
+                  onPress={() => openClassDetails(item)}
+                />
+              ))}
         </>
       )}
 
@@ -216,6 +272,59 @@ const styles = StyleSheet.create({
   categoryListContent: {
     paddingLeft: 16,
     paddingBottom: 12,
+  },
+  heroSkeleton: {
+    marginHorizontal: 24,
+    marginBottom: 20,
+    height: 335,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: colors.lightGray,
+    justifyContent: "flex-end",
+    padding: 16,
+  },
+  heroSkeletonImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroSkeletonLine: {
+    height: 14,
+    borderRadius: 7,
+    marginBottom: 8,
+    width: "70%",
+  },
+  heroSkeletonLineShort: {
+    height: 12,
+    borderRadius: 6,
+    width: "45%",
+  },
+  listSkeletonCard: {
+    flexDirection: "row",
+    padding: 14,
+    backgroundColor: colors.white,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    alignItems: "center",
+  },
+  listSkeletonImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 12,
+  },
+  listSkeletonContent: { flex: 1 },
+  listSkeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    width: "70%",
+    marginBottom: 8,
+  },
+  listSkeletonLineShort: {
+    height: 12,
+    borderRadius: 6,
+    width: "45%",
   },
   modalOverlay: {
     flex: 1,

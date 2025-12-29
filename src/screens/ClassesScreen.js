@@ -1,5 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from "react-native";
 
 import {
   usePastClassesQuery,
@@ -8,6 +15,7 @@ import {
 
 import ClassCard from "../components/cards/ClassCard";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
+import SkeletonBlock from "../components/common/SkeletonBlock";
 
 import { globalStyles } from "../styles/globalStyles";
 import colors from "../constants/colors";
@@ -18,6 +26,7 @@ export default function ClassesScreen() {
   const [selectedClass, setSelectedClass] = useState(null);
 
   const [timeTick, setTimeTick] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   /**
    * Orden:
@@ -40,8 +49,19 @@ export default function ClassesScreen() {
   const sortPast = (a, b) =>
     new Date(b.startDateTime) - new Date(a.startDateTime);
 
-  const { data: upcomingData } = useUpcomingClassesQuery({ limit: 50 });
-  const { data: pastData } = usePastClassesQuery();
+  const {
+    data: upcomingData,
+    isLoading: isUpcomingLoading,
+    isFetching: isUpcomingFetching,
+    isError: isUpcomingError,
+    refetch,
+  } = useUpcomingClassesQuery({ limit: 50 });
+  const {
+    data: pastData,
+    isLoading: isPastLoading,
+    isFetching: isPastFetching,
+    isError: isPastError,
+  } = usePastClassesQuery();
 
   /**
    * Recalcula estados (live/soon) sin hacer llamadas a la API.
@@ -61,6 +81,24 @@ export default function ClassesScreen() {
     () => [...(pastData || [])].sort(sortPast),
     [pastData]
   );
+
+  const showUpcomingSkeleton =
+    !refreshing &&
+    !(upcomingData && upcomingData.length) &&
+    (isUpcomingLoading || isUpcomingFetching || isUpcomingError);
+  const showPastSkeleton =
+    !refreshing &&
+    !(pastData && pastData.length) &&
+    (isPastLoading || isPastFetching || isPastError);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   const data = tab === "upcoming" ? upcoming : past;
 
@@ -99,17 +137,44 @@ export default function ClassesScreen() {
       </View>
 
       {/* Listado */}
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
-        {data.map((item) => (
-          <ClassCard
-            key={item.id}
-            item={item}
-            onPress={openClassDetails}
-            onJoinLive={handleJoinLive}
-          />
-        ))}
+      <ScrollView
+        contentContainerStyle={{ padding: 24 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+        }
+      >
+        {tab === "upcoming" && showUpcomingSkeleton
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <View key={`upcoming-skeleton-${index}`} style={styles.cardSkeleton}>
+                <SkeletonBlock style={styles.cardSkeletonImage} />
+                <View style={styles.cardSkeletonContent}>
+                  <SkeletonBlock style={styles.cardSkeletonLine} />
+                  <SkeletonBlock style={styles.cardSkeletonLineShort} />
+                  <SkeletonBlock style={styles.cardSkeletonMeta} />
+                </View>
+              </View>
+            ))
+          : tab === "past" && showPastSkeleton
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <View key={`past-skeleton-${index}`} style={styles.cardSkeleton}>
+                <SkeletonBlock style={styles.cardSkeletonImage} />
+                <View style={styles.cardSkeletonContent}>
+                  <SkeletonBlock style={styles.cardSkeletonLine} />
+                  <SkeletonBlock style={styles.cardSkeletonLineShort} />
+                  <SkeletonBlock style={styles.cardSkeletonMeta} />
+                </View>
+              </View>
+            ))
+          : data.map((item) => (
+              <ClassCard
+                key={item.id}
+                item={item}
+                onPress={openClassDetails}
+                onJoinLive={handleJoinLive}
+              />
+            ))}
 
-        {data.length === 0 && (
+        {data.length === 0 && !showUpcomingSkeleton && !showPastSkeleton && (
           <Text style={styles.emptyText}>
             No hay clases para mostrar.
           </Text>
@@ -146,5 +211,38 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 40,
     color: colors.gray,
+  },
+  cardSkeleton: {
+    flexDirection: "row",
+    padding: 12,
+    backgroundColor: colors.white,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+  cardSkeletonImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 12,
+  },
+  cardSkeletonContent: { flex: 1, justifyContent: "center" },
+  cardSkeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    width: "65%",
+    marginBottom: 8,
+  },
+  cardSkeletonLineShort: {
+    height: 12,
+    borderRadius: 6,
+    width: "45%",
+    marginBottom: 8,
+  },
+  cardSkeletonMeta: {
+    height: 10,
+    borderRadius: 5,
+    width: "55%",
   },
 });
