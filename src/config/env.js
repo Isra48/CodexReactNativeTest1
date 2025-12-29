@@ -16,6 +16,12 @@ const readEnvValue = (key) => {
 export const getStrapiUrl = () => readEnvValue("STRAPI_URL") || "";
 export const getStrapiToken = () => readEnvValue("STRAPI_API_TOKEN") || "";
 export const getContentSource = () => (readEnvValue("CONTENT_SOURCE") || DEFAULT_CONTENT_SOURCE).toLowerCase();
+export const getLoginStaleHours = () => {
+  const raw = readEnvValue("LOGIN_STALE_HOURS");
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 12;
+};
+export const getLoginRefetchAlways = () => readEnvValue("LOGIN_REFETCH_ALWAYS") === "true";
 
 export const isUsingStrapi = () => getContentSource() === "strapi";
 export const isMockSource = () => !isUsingStrapi();
