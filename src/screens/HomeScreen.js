@@ -9,12 +9,12 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 import colors from "../constants/colors";
-import { categories } from "../constants/data";
 import { globalStyles } from "../styles/globalStyles";
 
 import HeroCard from "../components/cards/HeroCard";
@@ -24,6 +24,8 @@ import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
 import SkeletonBlock from "../components/common/SkeletonBlock";
 
 import { useHeroClassQuery, useHomeClassesQuery } from "../services/content/classes.queries";
+import { useEventsQuery } from "../services/content/events.queries";
+import { useHomeContentQuery } from "../services/content/home.queries";
 
 
 import { useNotifications } from "../context/NotificationContext";
@@ -56,6 +58,20 @@ export default function HomeScreen() {
     isError: isHomeError,
     refetch,
   } = useHomeClassesQuery({ limit: 4 });
+  const {
+    data: eventsData,
+    isLoading: isEventsLoading,
+    isFetching: isEventsFetching,
+    isError: isEventsError,
+    refetch: refetchEvents,
+  } = useEventsQuery();
+  const {
+    data: homeContent,
+    isLoading: isHomeContentLoading,
+    isFetching: isHomeContentFetching,
+    isError: isHomeContentError,
+    refetch: refetchHomeContent,
+  } = useHomeContentQuery();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -68,11 +84,11 @@ export default function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchEvents(), refetchHomeContent()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, refetchEvents, refetchHomeContent]);
 
   const showHeroSkeleton =
     !refreshing &&
@@ -82,7 +98,22 @@ export default function HomeScreen() {
     !refreshing &&
     !(homeClasses && homeClasses.length) &&
     (isHomeLoading || isHomeFetching || isHomeError);
+  const showEventsSkeleton =
+    !refreshing &&
+    !(eventsData && eventsData.length) &&
+    (isEventsLoading || isEventsFetching || isEventsError);
+  const showCarouselTitleSkeleton =
+    !refreshing &&
+    !homeContent?.carouselTitle &&
+    (isHomeContentLoading || isHomeContentFetching || isHomeContentError);
+  const showListTitleSkeleton =
+    !refreshing &&
+    !homeContent?.listTitle &&
+    (isHomeContentLoading || isHomeContentFetching || isHomeContentError);
   const shouldRenderListSection = classList.length > 0 || showListSkeleton;
+  const eventsList = eventsData || [];
+  const carouselTitle = homeContent?.carouselTitle || "Eventos presenciales";
+  const listTitle = homeContent?.listTitle || "Próximas clases";
 
   
 
@@ -126,6 +157,22 @@ export default function HomeScreen() {
     );
   };
 
+  const handleOpenEventLink = async (eventItem) => {
+    const url = eventItem?.link;
+    if (!url) return;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.warn("Failed to open event link", error);
+      }
+    }
+  };
+
   return (
     <ScrollView
       style={globalStyles.container}
@@ -166,27 +213,51 @@ export default function HomeScreen() {
       )}
 
       {/* Categorías */}
-      <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
-        Eventos presenciales
-      </Text>
+      {showCarouselTitleSkeleton ? (
+        <SkeletonBlock style={[styles.sectionTitleSkeleton, styles.sectionTitle]} />
+      ) : (
+        <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
+          {carouselTitle}
+        </Text>
+      )}
 
-      <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.categoryListContent}
-        renderItem={({ item }) => (
-          <CategoryCard item={item} onPress={() => {}} />
-        )}
-        showsHorizontalScrollIndicator={false}
-      />
+      {showEventsSkeleton ? (
+        <FlatList
+          horizontal
+          data={Array.from({ length: 4 }, (_, index) => `event-skeleton-${index}`)}
+          keyExtractor={(item) => item}
+          contentContainerStyle={styles.categoryListContent}
+          renderItem={() => (
+            <View style={styles.categorySkeletonCard}>
+              <SkeletonBlock style={styles.categorySkeletonImage} />
+              <SkeletonBlock style={styles.categorySkeletonLine} />
+            </View>
+          )}
+          showsHorizontalScrollIndicator={false}
+        />
+      ) : (
+        <FlatList
+          horizontal
+          data={eventsList}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.categoryListContent}
+          renderItem={({ item }) => (
+            <CategoryCard item={item} onPress={() => handleOpenEventLink(item)} />
+          )}
+          showsHorizontalScrollIndicator={false}
+        />
+      )}
 
       {/* Próximas clases */}
       {shouldRenderListSection && (
         <>
-          <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
-            Próximas clases
-          </Text>
+          {showListTitleSkeleton ? (
+            <SkeletonBlock style={[styles.sectionTitleSkeleton, styles.sectionTitle]} />
+          ) : (
+            <Text style={[globalStyles.sectionTitle, styles.sectionTitle]}>
+              {listTitle}
+            </Text>
+          )}
 
           {showListSkeleton
             ? Array.from({ length: 4 }).map((_, index) => (
@@ -269,6 +340,11 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 8,
   },
+  sectionTitleSkeleton: {
+    height: 16,
+    width: 180,
+    borderRadius: 8,
+  },
   categoryListContent: {
     paddingLeft: 16,
     paddingBottom: 12,
@@ -296,6 +372,24 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     width: "45%",
+  },
+  categorySkeletonCard: {
+    width: 140,
+    height: 140,
+    borderRadius: 14,
+    marginRight: 12,
+    overflow: "hidden",
+    backgroundColor: colors.lightGray,
+    justifyContent: "flex-end",
+    padding: 8,
+  },
+  categorySkeletonImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  categorySkeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    width: "70%",
   },
   listSkeletonCard: {
     flexDirection: "row",

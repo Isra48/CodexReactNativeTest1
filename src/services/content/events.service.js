@@ -1,25 +1,57 @@
 import { strapiApi } from "../api/strapiApi";
-import { normalizeDateValue } from "../../utils/dateFormatting";
+import { getStrapiUrl } from "../../config/env";
 
-const EVENTS_ENDPOINT = "/api/events";
+const EVENTS_ENDPOINT = "/api/carrousels";
+
+const resolveAssetUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  const baseUrl = getStrapiUrl();
+  if (!baseUrl) return url;
+  const trimmedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  const path = url.startsWith("/") ? url : `/${url}`;
+  return `${trimmedBase}${path}`;
+};
+
+const basePopulate = {
+  populate: {
+    image: {
+      fields: ["url", "formats"],
+    },
+  },
+};
+
+const fields = ["title", "link"];
 
 export const getEvents = async (params = {}) => {
-  try {
-    const response = await strapiApi.get(EVENTS_ENDPOINT, {
-      fields: ["title", "startAt", "endAt"],
-      ...params,
-    });
-    return (response?.data || []).map((event) => ({
+  const response = await strapiApi.get(EVENTS_ENDPOINT, {
+    fields,
+    ...basePopulate,
+    ...params,
+  });
+  return (response?.data || []).map((event) => {
+    const attributes = event?.attributes || {};
+    const imageAttributes = attributes?.image?.data?.attributes;
+    const directImage =
+      typeof attributes?.image === "string" ? attributes.image : null;
+    const nestedImageUrl =
+      attributes?.image?.url ||
+      attributes?.image?.data?.url ||
+      attributes?.image?.data?.attributes?.url ||
+      null;
+    const imageUrl =
+      directImage ||
+      nestedImageUrl ||
+      imageAttributes?.formats?.medium?.url ||
+      imageAttributes?.formats?.small?.url ||
+      imageAttributes?.url ||
+      null;
+
+    return {
       id: String(event.id),
-      title: event?.attributes?.title || "",
-      startDateTime: normalizeDateValue(event?.attributes?.startAt),
-      endDateTime: normalizeDateValue(event?.attributes?.endAt),
-    }));
-  } catch (error) {
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.warn("Events fetch failed", error);
-    }
-    return [];
-  }
+      name: attributes?.title || "",
+      image: resolveAssetUrl(imageUrl),
+      link: attributes?.link || "",
+    };
+  });
 };
