@@ -8,9 +8,9 @@
     "assetBundlePatterns": ["**/*"],
     "plugins": ["expo-secure-store"],
     "extra": {
-      "STRAPI_URL": "",
-      "STRAPI_API_TOKEN": "",
-      "CONTENT_SOURCE": "mock"
+      "STRAPI_URL": "http://localhost:1337",
+      "STRAPI_API_TOKEN": "39040fd8654b596e880d6deba412c8421e14f98d2b161f2ffee8ad7db6fc07b1e70c74fa53b0ef6da828822e0cad52fc994f745e71cf9e4f41fa7b2ab12fbcff9ce53327e17062f0aca480c59f355bca2fc9d374ff1be89f9fd1537fb4982b807546cc538e9b199dcde762d6ad3b712fc22e18ed22ae40473ba7fe1d3b712050",
+      "CONTENT_SOURCE": "strapi"
     }
   }
 }

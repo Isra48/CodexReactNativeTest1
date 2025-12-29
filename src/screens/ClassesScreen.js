@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 
 import {
-  getPastClasses,
-  getUpcomingClasses,
-} from "../services/content/classes.repository";
+  usePastClassesQuery,
+  useUpcomingClassesQuery,
+} from "../services/content/classes.queries";
 
 import ClassCard from "../components/cards/ClassCard";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
@@ -17,8 +17,7 @@ export default function ClassesScreen() {
   const [tab, setTab] = useState("upcoming");
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const [upcoming, setUpcoming] = useState([]);
-  const [past, setPast] = useState([]);
+  const [timeTick, setTimeTick] = useState(0);
 
   /**
    * Orden:
@@ -41,36 +40,27 @@ export default function ClassesScreen() {
   const sortPast = (a, b) =>
     new Date(b.startDateTime) - new Date(a.startDateTime);
 
-  const loadClasses = useCallback(async () => {
-    try {
-      const [upcomingData, pastData] = await Promise.all([
-        getUpcomingClasses({ limit: 50 }),
-        getPastClasses(),
-      ]);
-
-      if (upcomingData) {
-        setUpcoming([...upcomingData].sort(sortUpcoming));
-      }
-
-      if (pastData) {
-        setPast([...pastData].sort(sortPast));
-      }
-    } catch (error) {
-      if (__DEV__) {
-        console.warn("Classes fetch failed");
-        console.error(error);
-      }
-    }
-  }, []);
+  const { data: upcomingData } = useUpcomingClassesQuery({ limit: 50 });
+  const { data: pastData } = usePastClassesQuery();
 
   /**
-   * Carga inicial + auto refresh cada minuto
+   * Recalcula estados (live/soon) sin hacer llamadas a la API.
    */
   useEffect(() => {
-    loadClasses();
-    const interval = setInterval(loadClasses, 60 * 1000);
+    const interval = setInterval(() => {
+      setTimeTick((value) => value + 1);
+    }, 60 * 1000);
     return () => clearInterval(interval);
-  }, [loadClasses]);
+  }, []);
+
+  const upcoming = useMemo(
+    () => [...(upcomingData || [])].sort(sortUpcoming),
+    [upcomingData, timeTick]
+  );
+  const past = useMemo(
+    () => [...(pastData || [])].sort(sortPast),
+    [pastData]
+  );
 
   const data = tab === "upcoming" ? upcoming : past;
 

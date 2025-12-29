@@ -1,14 +1,28 @@
-import { strapiClient } from "../../lib/strapi/strapiClient";
+import { strapiApi } from "../api/strapiApi";
 import { mapStrapiClassToAppModel } from "./mappers";
 
 const CLASSES_ENDPOINT = "/api/classes";
 
 const basePopulate = {
   populate: {
-    image: true,
-
+    image: {
+      fields: ["url", "formats"],
+    },
   },
 };
+
+const fields = [
+  "title",
+  "description",
+  "startAt",
+  "endAt",
+  "timezone",
+  "category",
+  "instructor",
+  "modality",
+  "materials",
+  "isActive",
+];
 
 const buildFilters = ({ upcomingOnly }) => {
   if (!upcomingOnly) return undefined;
@@ -25,7 +39,8 @@ const buildFilters = ({ upcomingOnly }) => {
 export const getClasses = async ({ upcomingOnly, limit } = {}) => {
   const filters = buildFilters({ upcomingOnly });
   const pagination = limit ? { pagination: { limit } } : undefined;
-  const response = await strapiClient.get(CLASSES_ENDPOINT, {
+  const response = await strapiApi.get(CLASSES_ENDPOINT, {
+    fields,
     ...basePopulate,
     ...filters,
     ...pagination,
@@ -40,7 +55,10 @@ export const getClasses = async ({ upcomingOnly, limit } = {}) => {
 
 export const getClassById = async (id) => {
   if (!id) return null;
-  const response = await strapiClient.get(`${CLASSES_ENDPOINT}/${id}`, basePopulate);
+  const response = await strapiApi.get(`${CLASSES_ENDPOINT}/${id}`, {
+    fields,
+    ...basePopulate,
+  });
   const attributes = response?.data?.attributes;
   if (!attributes) return null;
   return mapStrapiClassToAppModel(attributes, response.data.id);

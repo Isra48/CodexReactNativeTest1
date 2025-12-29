@@ -1,11 +1,14 @@
-import { strapiClient } from "../../lib/strapi/strapiClient";
+import { strapiApi } from "../api/strapiApi";
 import { normalizeDateValue } from "../../utils/dateFormatting";
 
 const EVENTS_ENDPOINT = "/api/events";
 
 export const getEvents = async (params = {}) => {
   try {
-    const response = await strapiClient.get(EVENTS_ENDPOINT, params);
+    const response = await strapiApi.get(EVENTS_ENDPOINT, {
+      fields: ["title", "startAt", "endAt"],
+      ...params,
+    });
     return (response?.data || []).map((event) => ({
       id: String(event.id),
       title: event?.attributes?.title || "",

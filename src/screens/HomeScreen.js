@@ -21,10 +21,7 @@ import CategoryCard from "../components/cards/CategoryCard";
 import DestinationCard from "../components/cards/DestinationCard";
 import ClassInfoBottomSheet from "../components/common/ClassInfoBottomSheet";
 
-import {
-  getHeroClass,
-  getHomeClasses,
-} from "../services/content/classes.repository";
+import { useHeroClassQuery, useHomeClassesQuery } from "../services/content/classes.queries";
 
 
 import { useNotifications } from "../context/NotificationContext";
@@ -44,35 +41,15 @@ export default function HomeScreen() {
     scheduleClassNotifications,
   } = useNotifications();
 
-useEffect(() => {
-  let isMounted = true;
+  const { data: heroData } = useHeroClassQuery();
+  const { data: homeClasses } = useHomeClassesQuery({ limit: 4 });
 
-  const hydrateContent = async () => {
-    try {
-      const [hero, list] = await Promise.all([
-        getHeroClass(),
-        getHomeClasses({ limit: 4 }),
-      ]);
-
-      if (!isMounted) return;
-
-      setFeatured(hero);
-      const filtered = list.filter((item) => item.id !== hero?.id);
-      setClassList(filtered.length ? filtered : list);
-    } catch (error) {
-      if (__DEV__) {
-        console.warn("Home content fetch failed");
-        console.error(error);
-      }
-    }
-  };
-
-  hydrateContent();
-
-  return () => {
-    isMounted = false;
-  };
-}, []);
+  useEffect(() => {
+    setFeatured(heroData || null);
+    const list = homeClasses || [];
+    const filtered = list.filter((item) => item.id !== heroData?.id);
+    setClassList(filtered.length ? filtered : list);
+  }, [heroData, homeClasses]);
 
   
 
